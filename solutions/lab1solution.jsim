@@ -1,0 +1,9 @@
+.include "nominal.jsim"
+.include "lab1checkoff.jsim"
+.include "gateslib.jsim"
+
+.subckt F A B C Z
+xTest0 A B E nand2
+xTest1 E C D nor2
+xTest2 D Z inv1
+.ends

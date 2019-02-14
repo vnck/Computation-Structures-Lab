@@ -1,0 +1,103 @@
+.include "C:/Users/Gabriel/Desktop/Term 4/50.002 Computation Structures/jsim/nominal.jsim"
+.include "C:/Users/Gabriel/Desktop/Term 4/50.002 Computation Structures/jsim/stdcell.jsim"
+.include "C:/Users/Gabriel/Desktop/Term 4/50.002 Computation Structures/jsim/checkoff2d/2dcheckoff_100ns.jsim"
+
+.subckt Aunit a b ci s g p
+Xxor1 a b 1 xor2
+Xxor2 1 ci s xor2
+Xgnand a b gn nand2
+Xginv gn g inverter
+Xpnor a b pn nor2
+Xpinv pn p inverter
+.ends
+
+.subckt Bunit p1 p2 g1 g2 p3 g3
+* 1 is i to j, 2 is j+1 to k, 3 is i to k
+Xnand1 p1 p2 p3n nand2
+Xp3inv p3n p3 inverter  //p
+Xnand2 p2 g1 1 nand2
+Xg2inv g2 g2n inverter
+Xnand3 1 g2n g3 nand2  //g
+.ends  
+
+.subckt Cunit p3 g3 cin cout
+Xnand1 p3 cin 1 nand2
+Xg3inv g3 g3n inverter
+Xnand2 1 g3n cout nand2
+.ends
+
+.subckt knex pa ga pb gb
+.connect pa pb
+.connect ga gb
+.ends
+
+
+.subckt 32bitadder A[31:0] B[31:0] cin s[31:0] c31
+XAbit A[31:0] B[31:0] c[31:0] s[31:0] g[31:0] p[31:0] Aunit
+* STAGE A
+XBA[16:1] p[30:0:2] p[31:1:2] g[30:0:2] g[31:1:2] pA[16:1] gA[16:1] Bunit
+* STAGE B
+* p & g are named after theBunits they were generated at (0 + stage + unit number from right to left)
+XBB[15:1] pA[15:1] pA[16:2] gA[15:1] gA[16:2] pB[15:1] gB[15:1] Bunit
+* STAGE C
+XBC1 pA1 pB2 gA1 gB2 pC1 gC1 Bunit
+XBC[14:2] pB[13:1] pB[15:3] gB[13:1] gB[15:3] pC[14:2] gC[14:2] Bunit
+* STAGE D
+XBD1 pA1 pC3 gA1 gC3 pD1 gD1 Bunit
+XBD2 pB1 pC4 gB1 gC4 pD2 gD2 Bunit
+XBD3 pC1 pC5 gC1 gC5 pD3 gD3 Bunit
+XBD[12:4] pC[10:2] pC[14:6] gC[10:2] gC[14:6] pD[12:4] gD[12:4] Bunit
+* STAGE E
+* p & g names converted to p0(bit num)
+XBE1 pA1 pD5 gA1 gD5 p017 g017 Bunit
+XBE2 pB1 pD6 gB1 gD6 p019 g019 Bunit
+XBE3 pC1 pD7 gC1 gD7 p021 g021 Bunit
+XBE4 pC2 pD8 gC2 gD8 p023 g023 Bunit
+XBE5 pD1 pD9 gD1 gD9 p025 g025 Bunit
+XBE6 pD2 pD10 gD2 gD10 p027 g027 Bunit
+XBE7 pD3 pD11 gD3 gD11 p029 g029 Bunit
+XBE8 pD4 pD12 gD4 gD12 p031 g031 Bunit
+XconA pA1 gA1 p01 g01 knex
+XconB pB1 gB1 p03 g03 knex
+XconC pC[2:1] gC[2:1] p0[7:5:2] g0[7:5:2] knex
+XconD pD[4:1] gD[4:1] p0[15:9:2] g0[15:9:2] knex
+* STAGE F
+* do all the even carries
+XBF[15:1] p0[29:1:2] p[30:2:2] g0[29:1:2] g[30:2:2] p0[30:2:2] g0[30:2:2] Bunit
+
+XC[31:1] p0[31:1] g0[31:1] cin#31 c[31:1] Cunit
+.connect cin c0
+.ends
+
+
+
+.subckt adder32 op0 A[31:0] B[31:0] s[31:0] z v n
+Xbxor B[31:0] op0#32 XB[31:0] xor2  //all the xor gates
+Xadderunit A[31:0] B[31:0] op0 s[31:0] c31 32bitadder
+//Xfirstadder A0 XB0 op0 s0 c0 FA
+//Xadder A[31:1] XB[31:1] c[30:0] s[31:1] c[31:1] FA
+.connect s31 n
+* for Z, make a 32-bit NOR gate with 4-bit OR and NOR gates (8OR,2OR,1NOR)
+Xztester1 s[31:24] s[23:16] s[15:8] s[7:0] orout[7:0] or4
+Xztester2 orout[7:6] orout[5:4] orout[3:2] orout[1:0] orout2[1:0] or4
+Xztester orout2[1] orout2[0] z nor2
+*for V, inv all the things then do the bool eqn
+Xburdens s31 invs31 inverter
+Xburdena A31 invA31 inverter
+Xburdenxb XB31 invXB31 inverter
+Xvckt1 A31 XB31 invs31 v1 and3
+Xvckt2 invA31 invXB31 s31 v2 and3
+Xvtester v1 v2 v or2
+.ends
+
+
+
+
+.subckt FA a b ci s co
+Xxor1 a b 1 xor2
+Xxor2 1 ci s xor2
+Xnand1 a b 2 nand2
+Xnand2 1 ci 3 nand2
+Xnand3 2 3 co nand2
+.ends
+

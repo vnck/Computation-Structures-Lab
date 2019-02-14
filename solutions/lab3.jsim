@@ -1,0 +1,198 @@
+*.include "nominal.jsim"
+*.include "stdcell.jsim"
+*.include "lab3adder.jsim"
+*.include "lab3compare.jsim"
+*.include "lab3boolean.jsim"
+*.include "lab3shifter.jsim"
+*.include "lab3checkoff_6.jsim"
+*.include "lab3multiply.jsim"
+*.include "lab3checkoff_10.jsim"
+
+******************************************************
+******************************************************
+**
+** 32-bit adder
+**
+******************************************************
+******************************************************
+
+.subckt adder a b ci co s
+Xxor0 a b t1 xor2
+Xand0 a b t3 and2
+Xxor1 t1 ci s xor2
+Xand1 t1 ci t2 and2
+Xor0 t2 t3 co or2
+.ends
+
+.subckt xor32 a b c
+Xxor0 a b c xor2
+.ends
+
+.subckt nor32 a[31:0] z
+Xnor4 a[0:7] a[8:15] a[16:23] a[24:31] b[1:8] nor4
+Xnand b[1:2] b[3:4] b[5:6] b[7:8] c[1:2] nand4
+Xnor2 c1 c2 z nor2
+.ends
+
+.subckt adder32 alufn[0] a[31:0] b[31:0] s[31:0] z v n
+Xxb b[31:0] alufn0#32 xb[31:0] xor2
+Xadder1 a0 xb0 alufn0 c0 s0 adder
+Xadder a[31:1] xb[31:1] c[30:0] c[31:1] s[31:1] adder
+Xinvs s[31:0] _s[31:0] inverter
+Xinva a[31:0] _a[31:0] inverter
+Xinvxb xb[31:0] _xb[31:0] inverter
+XZ s[31:0] z nor32
+XV1 a31 xb31 _s31 v1 and3
+XV2 _a31 _xb31 s31 v2 and3
+XV v1 v2 v or2
+.connect s31 n
+.ends
+
+******************************************************
+******************************************************
+**
+** 32-bit compare
+**
+******************************************************
+******************************************************
+
+.subckt compare32 ALUFN[2:1] z v n cmp[31:0]
+.connect 0 cmp[31:1]
+X1 n v nxorv xor2
+X2 z nxorv zpnxorv or2
+Xm ALUFN1 ALUFN2 0 z nxorv zpnxorv cmp0 mux4
+.ends
+
+******************************************************
+******************************************************
+**
+** 32-bit boolean
+**
+******************************************************
+******************************************************
+
+.subckt boole32 ALUFN[3:0] A[31:0] B[31:0] boole[31:0]
+Xm A[31:0] B[31:0] ALUFN0#32 ALUFN1#32 ALUFN2#32 ALUFN3#32 boole[31:0] mux4
+.ends
+
+******************************************************
+******************************************************
+**
+** 32-bit shifter
+**
+******************************************************
+******************************************************
+
+.subckt shift32 ALUFN[1:0] A[31:0] B[4:0] shift[31:0]
+XL4 B4#32 A[31:0] A[15:0] 0#16 W[31:0] mux2
+XL3 B3#32 W[31:0] W[23:0] 0#8 X[31:0] mux2
+XL2 B2#32 X[31:0] X[27:0] 0#4 Y[31:0] mux2
+XL1 B1#32 Y[31:0] Y[29:0] 0#2 Z[31:0] mux2
+XL0 B0#32 Z[31:0] Z[30:0] 0 SL[31:0] mux2
+
+Xsign ALUFN1 A31 f and2
+XR4 B4#32 A[31:0] f#16 A[31:16] H[31:0] mux2
+XR3 B3#32 H[31:0] f#8 H[31:8] I[31:0] mux2
+XR2 B2#32 I[31:0] f#4 I[31:4] J[31:0] mux2
+XR1 B1#32 J[31:0] f#2 J[31:2] K[31:0] mux2
+XR0 B0#32 K[31:0] f K[31:1] SR[31:0] mux2
+
+Xchoose ALUFN0#32 SL[31:0] SR[31:0] shift[31:0] mux2
+.ends
+
+******************************************************
+******************************************************
+**
+** 32-bit multiply
+**
+******************************************************
+******************************************************
+
+.subckt mult32 A[31:0] B[31:0] mult[31:0]
+XpAA A[0:31] B0#32 ZAA[0:31] and2
+XpAB A[0:31] B1#32 ZAB[0:31] and2
+XpAC A[0:31] B2#32 ZAC[0:31] and2
+XpAD A[0:31] B3#32 ZAD[0:31] and2
+XpAE A[0:31] B4#32 ZAE[0:31] and2
+XpAF A[0:31] B5#32 ZAF[0:31] and2
+XpAG A[0:31] B6#32 ZAG[0:31] and2
+XpAH A[0:31] B7#32 ZAH[0:31] and2
+XpAI A[0:31] B8#32 ZAI[0:31] and2
+XpAJ A[0:31] B9#32 ZAJ[0:31] and2
+XpBA A[0:31] B10#32 ZBA[0:31] and2
+XpBB A[0:31] B11#32 ZBB[0:31] and2
+XpBC A[0:31] B12#32 ZBC[0:31] and2
+XpBD A[0:31] B13#32 ZBD[0:31] and2
+XpBE A[0:31] B14#32 ZBE[0:31] and2
+XpBF A[0:31] B15#32 ZBF[0:31] and2
+XpBG A[0:31] B16#32 ZBG[0:31] and2
+XpBH A[0:31] B17#32 ZBH[0:31] and2
+XpBI A[0:31] B18#32 ZBI[0:31] and2
+XpBJ A[0:31] B19#32 ZBJ[0:31] and2
+XpCA A[0:31] B20#32 ZCA[0:31] and2
+XpCB A[0:31] B21#32 ZCB[0:31] and2
+XpCC A[0:31] B22#32 ZCC[0:31] and2
+XpCD A[0:31] B23#32 ZCD[0:31] and2
+XpCE A[0:31] B24#32 ZCE[0:31] and2
+XpCF A[0:31] B25#32 ZCF[0:31] and2
+XpCG A[0:31] B26#32 ZCG[0:31] and2
+XpCH A[0:31] B27#32 ZCH[0:31] and2
+XpCI A[0:31] B28#32 ZCI[0:31] and2
+XpCJ A[0:31] B29#32 ZCJ[0:31] and2
+XpDA A[0:31] B30#32 ZDA[0:31] and2
+XpDB A[0:31] B31#32 ZDB[0:31] and2
+
+XaAA 0 ZAA[31:0] ZAB[30:0] 0 PAA[31:0] zAA vAA nAA adder32
+XaAB 0 PAA[31:0] ZAC[29:0] 0#2 PAB[31:0] zAB vAB nAB adder32
+XaAC 0 PAB[31:0] ZAD[28:0] 0#3 PAC[31:0] zAC vAC nAC adder32
+XaAD 0 PAC[31:0] ZAE[27:0] 0#4 PAD[31:0] zAD vAD nAD adder32
+XaAE 0 PAD[31:0] ZAF[26:0] 0#5 PAE[31:0] zAE vAE nAE adder32
+XaAF 0 PAE[31:0] ZAG[25:0] 0#6 PAF[31:0] zAF vAF nAF adder32
+XaAG 0 PAF[31:0] ZAH[24:0] 0#7 PAG[31:0] zAG vAG nAG adder32
+XaAH 0 PAG[31:0] ZAI[23:0] 0#8 PAH[31:0] zAH vAH nAH adder32
+XaAI 0 PAH[31:0] ZAJ[22:0] 0#9 PAI[31:0] zAI vAI nAI adder32
+XaAJ 0 PAI[31:0] ZBA[21:0] 0#10 PAJ[31:0] zAJ vAJ nAJ adder32
+XaBA 0 PAJ[31:0] ZBB[20:0] 0#11 PBA[31:0] zBA vBA nBA adder32
+XaBB 0 PBA[31:0] ZBC[19:0] 0#12 PBB[31:0] zBB vBB nBB adder32
+XaBC 0 PBB[31:0] ZBD[18:0] 0#13 PBC[31:0] zBC vBC nBC adder32
+XaBD 0 PBC[31:0] ZBE[17:0] 0#14 PBD[31:0] zBD vBD nBD adder32
+XaBE 0 PBD[31:0] ZBF[16:0] 0#15 PBE[31:0] zBE vBE nBE adder32
+XaBF 0 PBE[31:0] ZBG[15:0] 0#16 PBF[31:0] zBF vBF nBF adder32
+XaBG 0 PBF[31:0] ZBH[14:0] 0#17 PBG[31:0] zBG vBG nBG adder32
+XaBH 0 PBG[31:0] ZBI[13:0] 0#18 PBH[31:0] zBH vBH nBH adder32
+XaBI 0 PBH[31:0] ZBJ[12:0] 0#19 PBI[31:0] zBI vBI nBI adder32
+XaBJ 0 PBI[31:0] ZCA[11:0] 0#20 PBJ[31:0] zBJ vBJ nBJ adder32
+XaCA 0 PBJ[31:0] ZCB[10:0] 0#21 PCA[31:0] zCA vCA nCA adder32
+XaCB 0 PCA[31:0] ZCC[9:0] 0#22 PCB[31:0] zCB vCB nCB adder32
+XaCC 0 PCB[31:0] ZCD[8:0] 0#23 PCC[31:0] zCC vCC nCC adder32
+XaCD 0 PCC[31:0] ZCE[7:0] 0#24 PCD[31:0] zCD vCD nCD adder32
+XaCE 0 PCD[31:0] ZCF[6:0] 0#25 PCE[31:0] zCE vCE nCE adder32
+XaCF 0 PCE[31:0] ZCG[5:0] 0#26 PCF[31:0] zCF vCF nCF adder32
+XaCG 0 PCF[31:0] ZCH[4:0] 0#27 PCG[31:0] zCG vCG nCG adder32
+XaCH 0 PCG[31:0] ZCI[3:0] 0#28 PCH[31:0] zCH vCH nCH adder32
+XaCI 0 PCH[31:0] ZCJ[2:0] 0#29 PCI[31:0] zCI vCI nCI adder32
+XaCJ 0 PCI[31:0] ZDA[1:0] 0#30 PCJ[31:0] zCJ vCJ nCJ adder32
+XaDA 0 PCJ[31:0] ZDB0 0#31 mult[31:0] zout vout nout adder32
+.ends
+
+******************************************************
+******************************************************
+**
+** 32-bit ALU
+**
+******************************************************
+******************************************************
+
+.subckt arith32 ALUFN[1:0] A[31:0] B[31:0] out[31:0] z v n
+Xadd ALUFN0 A[31:0] B[31:0] add[31:0] z v n adder32
+xmult A[31:0] B[31:0] mult[31:0] mult32
+xm ALUFN1#32 add[31:0] mult[31:0] out[31:0] mux2
+.ends
+
+.subckt alu ALUFN[5:0] A[31:0] B[31:0] alu[31:0] z v n
+Xarith ALUFN[1:0] A[31:0] B[31:0] Zarith[31:0] z v n arith32
+Xboole ALUFN[3:0] A[31:0] B[31:0] Zbool[31:0] boole32
+Xshift ALUFN[1:0] A[31:0] B[4:0] Zshift[31:0] shift32
+Xcmp ALUFN[2:1] z v n Zcmp[31:0] compare32
+Xm ALUFN4#32 ALUFN5#32 Zarith[31:0] Zbool[31:0] Zshift[31:0] Zcmp[31:0] alu[31:0] mux4
+.ends
